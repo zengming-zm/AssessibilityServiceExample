@@ -3,6 +3,7 @@ package com.example.assessibilityserviceexample;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.ObjectOutputStream;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -177,10 +178,24 @@ public class ExampleAccessibilityService extends AccessibilityService {
 
 //                AccessibilityNodeInfo rootNode1 = getRootInActiveWindow();
                 obj = new JSONObject();
+
+                long startTimestamp = System.currentTimeMillis();
+
                 JSONObject head = findChildViews2(currNode, 0, rect);
                 if (head == null) {
                     break;
                 }
+
+                try {
+                    head.put("timestamp", String.valueOf(startTimestamp));
+                    head.put("update_type", "TYPE_VIEW_CLICKED");
+                }catch (JSONException e){
+                    Log.d("tv1Text", "input to json error: " + e.toString());
+                    e.printStackTrace();
+                }
+
+
+
 
                 Log.d("tv1Text", "head.size: " + String.valueOf(head.length()));
                 Log.d("tv1Text", "head: " + head.toString());
@@ -220,12 +235,25 @@ public class ExampleAccessibilityService extends AccessibilityService {
                 if (rootNode.getPackageName().toString().contentEquals("com.google.android.googlequicksearchbox")) {
 
                     Log.d(TAG, "tv1Text: ===================Log Begin===================");
+
                     obj = new JSONObject();
+
+                    startTimestamp = System.currentTimeMillis();
                     head = findChildViews2(rootNode, 0, null);
 
                     if (head == null) {
                         break;
                     }
+
+                    try {
+                        head.put("timestamp", String.valueOf(startTimestamp));
+                        head.put("update_type", "TYPE_WINDOW_CONTENT_CHANGED");
+                    }catch (JSONException e){
+                        Log.d("tv1Text", "input to json error: " + e.toString());
+                        e.printStackTrace();
+                    }
+
+
                     Log.d("tv1Text", "head.size: " + String.valueOf(head.length()));
                     Log.d("tv1Text", "head: " + head.toString());
 
@@ -316,11 +344,11 @@ public class ExampleAccessibilityService extends AccessibilityService {
                 obj.put("is_source", 1);
             }
 
-            if (layer == 0) {
-                Log.d("tv1Text", "layer 0");
-                obj.put("time", timestamp);
-                obj.put("update_type", updateType);
-            }
+//            if (layer == 0) {
+//                Log.d("tv1Text", "layer 0");
+//                obj.put("time", timestamp);
+//                obj.put("update_type", updateType);
+//            }
 
         } catch (JSONException e) {
             Log.d("tvText", "json error: " + e.toString());
@@ -337,7 +365,7 @@ public class ExampleAccessibilityService extends AccessibilityService {
 
         try {
             for (int i = 0; i < childCount; i++) {
-                children.put("child(" + String.valueOf(i) + ")", findChildViews2(parentView.getChild(i), j + 1));
+                children.put("child(" + String.valueOf(i) + ")", findChildViews2(parentView.getChild(i), j + 1, clickBox));
             }
             obj.put("child", children);
         } catch (JSONException e) {
