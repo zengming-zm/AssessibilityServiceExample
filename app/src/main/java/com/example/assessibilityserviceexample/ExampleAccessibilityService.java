@@ -28,13 +28,13 @@ public class ExampleAccessibilityService extends AccessibilityService {
     ArrayList<AccessibilityNodeInfo> textViewNodes;
     ArrayList<Integer> textViewNodeIndex;
     Pair<AccessibilityNodeInfo, Integer> p;
-    ArrayList<Pair <AccessibilityNodeInfo, Integer>> textPairViewNodes;
+    ArrayList<Pair<AccessibilityNodeInfo, Integer>> textPairViewNodes;
 
     AccessibilityNodeInfo currNode;
     String updateType = "";
     String timestamp;
     public static JSONObject obj;
-    public static JSONObject head;
+//    public static JSONObject head;
     public static JSONArray jsonList = new JSONArray();
 
     JSONObject outputLayout = new JSONObject();
@@ -115,31 +115,6 @@ public class ExampleAccessibilityService extends AccessibilityService {
         node.recycle();
     }
 
-    private String getEventType(AccessibilityEvent event) {
-        switch (event.getEventType()) {
-            case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
-                return "TYPE_NOTIFICATION_STATE_CHANGED";
-            case AccessibilityEvent.TYPE_VIEW_CLICKED:
-                return "TYPE_VIEW_CLICKED";
-            case AccessibilityEvent.TYPE_VIEW_FOCUSED:
-                return "TYPE_VIEW_FOCUSED";
-            case AccessibilityEvent.TYPE_VIEW_LONG_CLICKED:
-                return "TYPE_VIEW_LONG_CLICKED";
-            case AccessibilityEvent.TYPE_VIEW_SELECTED:
-                return "TYPE_VIEW_SELECTED";
-            case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
-                return "TYPE_WINDOW_STATE_CHANGED";
-            case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED:
-                return "TYPE_VIEW_TEXT_CHANGED";
-            case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                return "TYPE_WINDOW_CONTENT_CHANGED";
-            case AccessibilityEvent.TYPE_WINDOWS_CHANGED:
-                return "TYPE_WINDOWS_CHANGED";
-            case AccessibilityEvent.TYPE_VIEW_SCROLLED:
-                return "TYPE_VIEW_SCROLLED";
-        }
-        return "default";
-    }
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -162,8 +137,8 @@ public class ExampleAccessibilityService extends AccessibilityService {
         }
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
         textViewNodes = new ArrayList<AccessibilityNodeInfo>();
-        for(AccessibilityNodeInfo mNode : textViewNodes){
-            if(mNode.getText()!=null){
+        for (AccessibilityNodeInfo mNode : textViewNodes) {
+            if (mNode.getText() != null) {
                 Log.d(TAG, "window content: " + mNode.getText().toString());
             }
         }
@@ -179,28 +154,31 @@ public class ExampleAccessibilityService extends AccessibilityService {
                 updateType = "TYPE_VIEW_CLICKED";
                 rootNode = event.getSource();
 
+                if (rootNode == null || rootNode.getPackageName() == null ){
+                    break;
+                }
 //                if (!rootNode.getPackageName().toString().contentEquals("com.google.android.googlequicksearchbox")) {
 //                    break;
 //                }
 
-                int windowId = event.getWindowId();
+//                int windowId = event.getWindowId();
                 Log.d("tv1Text", "event.getSource()" + rootNode.getClassName().toString());
                 Rect rect = new Rect();
                 rootNode.getBoundsInScreen(rect);
 
                 Log.d(TAG, String.format("tv1Text: clicked bounding box: top:%d, bottom:%d, left:%d, right:%d: "
-                        ,rect.top
-                        ,rect.bottom
-                        ,rect.left
-                        ,rect.right));
+                        , rect.top
+                        , rect.bottom
+                        , rect.left
+                        , rect.right));
 
 
 //                findSourceWindow2(rootNode, windowId, 0);
 
 //                AccessibilityNodeInfo rootNode1 = getRootInActiveWindow();
                 obj = new JSONObject();
-                findChildViews2(currNode, 0, obj, new JSONArray());
-                if (head == null){
+                JSONObject head = findChildViews2(currNode, 0, rect);
+                if (head == null) {
                     break;
                 }
 
@@ -208,15 +186,15 @@ public class ExampleAccessibilityService extends AccessibilityService {
                 Log.d("tv1Text", "head: " + head.toString());
 
                 String filename = Environment.getExternalStorageDirectory().getAbsolutePath()
-                        +  "/test/" +timestamp + ".json";
-                try{
+                        + "/test/" + timestamp + ".json";
+                try {
                     Log.d("tv1Text", "save to json");
                     ObjectOutputStream outputStream = null;
                     outputStream = new ObjectOutputStream(new FileOutputStream(filename));
                     outputStream.writeObject(head.toString());
                     outputStream.flush();
                     outputStream.close();
-                }catch (Exception e){
+                } catch (Exception e) {
                     Log.d("tv1Text", "output error: " + e.toString());
                     System.err.println("Error: " + e);
                 }
@@ -232,18 +210,10 @@ public class ExampleAccessibilityService extends AccessibilityService {
                 updateType = "TYPE_WINDOW_CONTENT_CHANGED";
                 rootNode = getRootInActiveWindow();
                 currNode = rootNode;
-//                rootNode = event.getSource();
 
-//                AccessibilityNodeInfo ani = event.getSource();
-//                if (ani != null) {
-//                    ani.refresh(); // to fix issue with viewIdResName = null on Android 6+
-//                }
-//                String viewIdResourceName = ani.getViewIdResourceName();
-//                Log.d(TAG, "tv1Text - view resource name: " + viewIdResourceName);
-
-
-                //com.google.android.googlequicksearchbox
-//                Log.d(TAG, "app name: " + rootNode.getPackageName().toString());
+                if (rootNode == null || rootNode.getPackageName() == null ){
+                    return;
+                }
 
                 textViewNodes = new ArrayList<AccessibilityNodeInfo>();
 
@@ -251,9 +221,9 @@ public class ExampleAccessibilityService extends AccessibilityService {
 
                     Log.d(TAG, "tv1Text: ===================Log Begin===================");
                     obj = new JSONObject();
-                    findChildViews2(rootNode, 0, obj, new JSONArray());
+                    head = findChildViews2(rootNode, 0, null);
 
-                    if (head == null){
+                    if (head == null) {
                         break;
                     }
                     Log.d("tv1Text", "head.size: " + String.valueOf(head.length()));
@@ -262,8 +232,8 @@ public class ExampleAccessibilityService extends AccessibilityService {
                     Log.d(TAG, "tv1Text: ===================Log end===================");
 
                     filename = Environment.getExternalStorageDirectory().getAbsolutePath()
-                            +  "/test/" +timestamp + ".json";
-                    try{
+                            + "/test/" + timestamp + ".json";
+                    try {
                         Log.d("tv1Text", "save to json");
                         ObjectOutputStream outputStream = null;
                         outputStream = new ObjectOutputStream(new FileOutputStream(filename));
@@ -271,7 +241,7 @@ public class ExampleAccessibilityService extends AccessibilityService {
                         outputStream.flush();
                         outputStream.close();
 
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Log.d("tv1Text", "output error: " + e.toString());
                         System.err.println("Error: " + e);
                     }
@@ -281,88 +251,10 @@ public class ExampleAccessibilityService extends AccessibilityService {
 
     }
 
-    private void findSourceWindow(AccessibilityNodeInfo parentView, int windowID) {
-        if (parentView == null || parentView.getClassName() == null ) {
-            Log.d(TAG, "tv1Text cannot find event source");
-            return;
-        }
-        LinkedList<AccessibilityNodeInfo> nodeQueue = new LinkedList<>();
-        nodeQueue.add(parentView);
-
-        while (!nodeQueue.isEmpty()){
-            AccessibilityNodeInfo node = nodeQueue.poll();
-            if (node == null){
-                continue;
-            }
-            if (node.getWindow().getId() == windowID){
-                Log.d("DEBUG", "tv1Text target window id is: " + String.valueOf(windowID));
-            }
-
-            for (int i = 0; i < parentView.getChildCount(); i++){
-                nodeQueue.add(parentView.getChild(i));
-            }
-        }
-        Log.d(TAG, "tv1Text cannot find event source");
-    }
-
-    private void findSourceWindow2(AccessibilityNodeInfo parentView, int windowId, int j) {
-        if (parentView == null || parentView.getClassName() == null ) {
-            return;
-        }
-
-        //com.google.android.apps.gsa.searchplate.widget.StreamingTextView
-        //android.widget.TextView
-        int childCount = parentView.getChildCount();
-
-        if (parentView.getWindow().getId() == windowId){
-            Rect rect = new Rect();
-            parentView.getBoundsInScreen(rect);
-
-            Log.d(TAG, String.format("tv1Text: clicked bounding box: top:%d, bottom:%d, left:%d, right:%d: "
-                    ,rect.top
-                    ,rect.bottom
-                    ,rect.left
-                    ,rect.right));
-        }
-
-        Log.d(TAG, "tv1Text: parentView.getClassName(): " + parentView.getClassName().toString());
-
-        if (childCount == 0 && (parentView.getClassName().toString().contains("TextView"))) {
-            textViewNodes.add(parentView);
-
-            Rect rect = new Rect();
-            Rect parentRect = new Rect();
-            parentView.getBoundsInScreen(rect);
-            parentView.getBoundsInParent(parentRect);
-
-            Log.d(TAG, String.format("tv1Text: %s, id:%d" +
-                            ", top:%d, bottom:%d, left:%d, right:%d" +
-                            ", parTop:%d, parBottom:%d,parLeft:%d,parRight:%d",
-                    parentView.getText().toString()
-                    ,j
-                    ,rect.top
-                    ,rect.bottom
-                    ,rect.left
-                    ,rect.right
-                    ,parentRect.top
-                    ,parentRect.bottom
-                    ,parentRect.left
-                    ,parentRect.right));
-            Log.d(TAG, "tv1Text: " + parentView.getClassName().toString());
-            Log.d(TAG, "tv1Text: getViewIdResourceName: " + parentView.getViewIdResourceName());
-
-        } else {
-            for (int i = 0; i < childCount; i++) {
-                findSourceWindow2(parentView.getChild(i), windowId, j+1);
-            }
-        }
-    }
-
-    private void findChildViews2(AccessibilityNodeInfo parentView, int j
-            , JSONObject parent, JSONArray jsonList) {
-        if (parentView == null || parentView.getClassName() == null ) {
+    private JSONObject findChildViews2(AccessibilityNodeInfo parentView, int j, Rect clickBox) {
+        if (parentView == null || parentView.getClassName() == null) {
             Log.d("tv1Text", "in findChildViews, parentView == null || parentView.getClassName()");
-            return;
+            return null;
         }
 
 
@@ -370,8 +262,11 @@ public class ExampleAccessibilityService extends AccessibilityService {
                 parentView.getClassName() == null ? "" : parentView.getClassName().toString();
         String resourceName =
                 parentView.getViewIdResourceName() == null ? "" : parentView.getViewIdResourceName();
-        String content =
-                parentView.getClassName().toString().contains("TextView") ? parentView.getText().toString() : "";
+        String content = "";
+        if (parentView.getClassName() != null && parentView.getText() != null && parentView.getClassName().toString().contains("TextView")){
+            content = parentView.getText().toString();
+        }
+
         int layer = j;
 
         Rect rect = new Rect();
@@ -383,18 +278,18 @@ public class ExampleAccessibilityService extends AccessibilityService {
                         "class_name:[%s], resource_name:[%s], content:[%s], layer:[%d]" +
                         ", top:[%d], bottom:[%d], left:[%d], right:[%d]" +
                         ", parTop:[%d], parBottom:[%d],parLeft:[%d],parRight:[%d]"
-                ,className
-                ,resourceName
-                ,content
-                ,layer
-                ,rect.top
-                ,rect.bottom
-                ,rect.left
-                ,rect.right
-                ,parentRect.top
-                ,parentRect.bottom
-                ,parentRect.left
-                ,parentRect.right));
+                , className
+                , resourceName
+                , content
+                , layer
+                , rect.top
+                , rect.bottom
+                , rect.left
+                , rect.right
+                , parentRect.top
+                , parentRect.bottom
+                , parentRect.left
+                , parentRect.right));
         //com.google.android.apps.gsa.searchplate.widget.StreamingTextView
         //android.widget.TextView
 
@@ -413,17 +308,19 @@ public class ExampleAccessibilityService extends AccessibilityService {
 
             obj.put("rect", jRect);
 
-            if (parent == null){
-                Log.d("tv1Text", "parent is empty");
-                parent = obj;
-                parent.put("time", timestamp);
-                parent.put("update_type", updateType);
+            if (clickBox != null
+                    && clickBox.top == rect.top
+                    && clickBox.bottom  == rect.bottom
+                    && clickBox.left == rect.left
+                    && clickBox.right == rect.right){
+                obj.put("is_source", 1);
             }
-            else{
-                Log.d("tv1Text", "parent is not empty. size: " + String.valueOf(parent.length()));
-                jsonList.put(obj);
+
+            if (layer == 0) {
+                Log.d("tv1Text", "layer 0");
+                obj.put("time", timestamp);
+                obj.put("update_type", updateType);
             }
-            head = parent;
 
         } catch (JSONException e) {
             Log.d("tvText", "json error: " + e.toString());
@@ -431,61 +328,25 @@ public class ExampleAccessibilityService extends AccessibilityService {
         }
 
         int childCount = parentView.getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            findChildViews2(parentView.getChild(i), j + 1, obj);
+        if (childCount == 0) {
+            return obj;
         }
+
+//        List<JSONObject> children = new ArrayList<JSONObject>();
+        JSONObject children = new JSONObject();
+
         try {
-            parent.put("child", jsonList);
-        } catch (JSONException e){
+            for (int i = 0; i < childCount; i++) {
+                children.put("child(" + String.valueOf(i) + ")", findChildViews2(parentView.getChild(i), j + 1));
+            }
+            obj.put("child", children);
+        } catch (JSONException e) {
             Log.d("tvText", "json error: " + e.toString());
             e.printStackTrace();
         }
-        Log.d("tv1Text", "parent json: " + parent.toString());
-        jsonList = new JSONArray();
+        return obj;
     }
 
-
-    private void findChildViews(AccessibilityNodeInfo parentView, int j) {
-        if (parentView == null || parentView.getClassName() == null ) {
-            Log.d("tv1Text", "in findChildViews, parentView == null || parentView.getClassName()");
-            return;
-        }
-
-        //com.google.android.apps.gsa.searchplate.widget.StreamingTextView
-        //android.widget.TextView
-        int childCount = parentView.getChildCount();
-
-
-        if (childCount == 0 && (parentView.getClassName().toString().contains("TextView"))) {
-            textViewNodes.add(parentView);
-
-            Rect rect = new Rect();
-            Rect parentRect = new Rect();
-            parentView.getBoundsInScreen(rect);
-            parentView.getBoundsInParent(parentRect);
-            int isClicked = 0;
-
-            Log.d(TAG, String.format("tv1Text: %s, id:%d" +
-                            ", top:%d, bottom:%d, left:%d, right:%d" +
-                            ", parTop:%d, parBottom:%d,parLeft:%d,parRight:%d",
-                    parentView.getText().toString()
-                    ,j
-                    ,rect.top
-                    ,rect.bottom
-                    ,rect.left
-                    ,rect.right
-                    ,parentRect.top
-                    ,parentRect.bottom
-                    ,parentRect.left
-                    ,parentRect.right));
-            Log.d(TAG, "tv1Text: " + parentView.getClassName().toString());
-            Log.d(TAG, "tv1Text: getViewIdResourceName: " + parentView.getViewIdResourceName());
-        } else {
-            for (int i = 0; i < childCount; i++) {
-                findChildViews(parentView.getChild(i), j+1);
-            }
-        }
-    }
 
     @Override
     protected void onServiceConnected() {
