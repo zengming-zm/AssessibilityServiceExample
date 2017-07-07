@@ -1,0 +1,2 @@
+# AssessibilityServiceExample
+screen layout logging
